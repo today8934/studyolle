@@ -55,7 +55,9 @@ class AccountControllerTest {
                 .andExpect(view().name("redirect:/"));
 
         Account account = accountRepository.findByEmail("today8934@email.com");
+        assertNotNull(account);
         assertNotEquals(account.getPassword(), "1234567891");
+        assertNotNull(account.getEmailCheckToken());
         assertTrue(accountRepository.existsByEmail("today8934@email.com"));
         then(javaMailSender).should().send(any(SimpleMailMessage.class));
     }
