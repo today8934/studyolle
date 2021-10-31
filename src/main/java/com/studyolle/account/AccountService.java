@@ -30,6 +30,12 @@ public class AccountService {
         return newAccount;
     }
 
+    public void resendConfirmEmail(Account account) {
+        account.generateEmailCheckToken();
+        accountRepository.save(account);
+        sendSignUpConfirmEmail(account);
+    }
+
     private Account saveNewAccount(SignUpForm signUpForm) {
         Account account = Account.builder()
                 .email(signUpForm.getEmail())
@@ -55,7 +61,7 @@ public class AccountService {
 
     public void login(Account account) {
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
-                account.getNickname(),
+                new UserAccount(account),
                 account.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE USER")));
 
