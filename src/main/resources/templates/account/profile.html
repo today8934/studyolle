@@ -15,6 +15,12 @@
              th:src="${account.profileImage}" width="125" height="125" />
       </div>
       <div class="col-8">
+        <div th:if="${message}" class="alert alert-info alert-dismissible fade show mt-3" role="alert">
+          <span th:text="${message}">완료</span>
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">x</span>
+          </button>
+        </div>
         <!-- Nickname -->
         <h1 class="display-4" th:text="${account.nickname}">Nickname</h1>
         <!-- Bio -->
@@ -70,7 +76,7 @@
               <span th:text="${#temporals.format(account.joinedAt, 'yyyy년 M월 가입')}" class="col-9"></span>
             </p>
             <div th:if="${isOwner}">
-              <a class="btn btn-outline-primary" th:href="@{/settins/profile}">프로필 수정</a>
+              <a class="btn btn-outline-primary" th:href="@{/settings/profile}">프로필 수정</a>
             </div>
           </div>
           <div class="tab-pane fade" id="v-pills-study" role="tabpanel" aria-labelledby="v-pills-profile-tab">
