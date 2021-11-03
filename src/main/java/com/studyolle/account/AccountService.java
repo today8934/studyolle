@@ -101,4 +101,9 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account);
         //TODO 네비게이션바의 프로필 이미지 변경처리
     }
+
+    public void updatePassword(Account account, String newPassword) {
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+    }
 }
