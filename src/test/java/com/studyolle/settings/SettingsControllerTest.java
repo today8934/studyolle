@@ -138,4 +138,11 @@ class SettingsControllerTest {
         assertFalse(passwordEncoder.matches("q1w2e3r4t5", wook.getPassword()));
     }
 
+    @DisplayName("알림 폼")
+    @Test
+    @WithAccount("wook")
+    void notificationsForm() throws Exception {
+
+    }
+
 }
