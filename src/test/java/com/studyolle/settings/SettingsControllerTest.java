@@ -3,25 +3,20 @@ package com.studyolle.settings;
 import com.studyolle.WithAccount;
 import com.studyolle.account.AccountRepository;
 import com.studyolle.account.AccountService;
-import com.studyolle.account.SignUpForm;
 import com.studyolle.domain.Account;
-import org.aspectj.lang.annotation.After;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.TestExecutionEvent;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
-
-import javax.validation.constraints.AssertTrue;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -142,6 +137,35 @@ class SettingsControllerTest {
     @Test
     @WithAccount("wook")
     void notificationsForm() throws Exception {
+        mockMvc.perform(get(SettingsController.SETTINGS_NOTIFICATION_URL))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("notifications"))
+                .andExpect(view().name(SettingsController.SETTINGS_NOTIFICATION_VIEW_NAME));
+    }
+
+    @DisplayName("알림 상태 변경")
+    @Test
+    @WithAccount("wook")
+    void updateNotifications() throws Exception {
+        mockMvc.perform(post(SettingsController.SETTINGS_NOTIFICATION_URL)
+                .param("studyCreatedByEmail", "true")
+                .param("studyCreatedByWeb", "false")
+                .param("studyEnrollmentResultByEmail", "false")
+                .param("studyEnrollmentResultByWeb", "true")
+                .param("studyUpdatedByWeb", "true")
+                .param("studyUpdatedByEmail", "false").with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(SettingsController.SETTINGS_NOTIFICATION_URL))
+                .andExpect(flash().attributeExists("message"));
+
+        Account wook = accountRepository.findByNickname("wook");
+        System.out.println("wook.isStudyCreatedByEmail() = " + wook.isStudyCreatedByEmail());
+        System.out.println("wook.isStudyCreatedByWeb() = " + wook.isStudyCreatedByWeb());
+        System.out.println("wook.isStudyEnrollmentResultByEmail() = " + wook.isStudyEnrollmentResultByEmail());
+        System.out.println("wook.isStudyEnrollmentResultByWeb() = " + wook.isStudyEnrollmentResultByWeb());
+        System.out.println("wook.isStudyUpdatedByEmail() = " + wook.isStudyUpdatedByEmail());
+        System.out.println("wook.isStudyUpdatedByWeb() = " + wook.isStudyUpdatedByWeb());
 
     }
 
