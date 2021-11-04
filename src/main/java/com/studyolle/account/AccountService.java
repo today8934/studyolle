@@ -114,5 +114,6 @@ public class AccountService implements UserDetailsService {
     public void updateNickname(Account account, NicknameForm nicknameForm) {
         account.setNickname(nicknameForm.getNickname());
         accountRepository.save(account);
+        login(account);
     }
 }

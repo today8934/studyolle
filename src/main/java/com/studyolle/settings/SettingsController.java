@@ -20,11 +20,6 @@ import javax.validation.Valid;
 @Controller
 @RequiredArgsConstructor
 public class SettingsController {
-    
-    @InitBinder("passwordForm")
-    public void initBinder(WebDataBinder webDataBinder) {
-        webDataBinder.addValidators(new PasswordFormValidator());
-    }
 
     static final String SETTINGS_PROFILE_VIEW_NAME = "settings/profile";
     static final String SETTINGS_PROFILE_URL = "/settings/profile";
@@ -37,6 +32,17 @@ public class SettingsController {
 
     private final AccountService accountService;
     private final ModelMapper modelMapper;
+    private final NicknameFormValidator nicknameFormValidator;
+
+    @InitBinder("passwordForm")
+    public void passwordFormInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(new PasswordFormValidator());
+    }
+
+    @InitBinder("nicknameForm")
+    public void nicknameFormInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(nicknameFormValidator);
+    }
 
     @GetMapping(SETTINGS_PROFILE_URL)
     public String updateProfileForm(@CurrentUser Account account, Model model) {
@@ -105,14 +111,17 @@ public class SettingsController {
 
     @GetMapping(SETTINGS_ACCOUNT_URL)
     public String accountForm(@CurrentUser Account account, Model model) {
+        NicknameForm nicknameForm = new NicknameForm();
+        nicknameForm.setNickname(account.getNickname());
+
         model.addAttribute(account);
-        model.addAttribute(new NicknameForm(account));
+        model.addAttribute(nicknameForm);
 
         return SETTINGS_ACCOUNT_VIEW_NAME;
     }
 
     @PostMapping(SETTINGS_ACCOUNT_URL)
-    public String updateNickname(@CurrentUser Account account, @Valid @ModelAttribute NicknameForm nicknameForm
+    public String updateNickname(@CurrentUser Account account, @Valid NicknameForm nicknameForm
             , Errors errors, Model model, RedirectAttributes attributes) {
 
         if (errors.hasErrors()) {
