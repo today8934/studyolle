@@ -33,5 +33,7 @@ build/
 .vscode/
 
 ### NPM ###
+package-lock.json
+package.json
 src/main/resources/static/node_modules
 src/main/resources/static/node

@@ -115,4 +115,22 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account);
         login(account);
     }
+
+    public void sendLoginWithoutPasswordEmail(String email) {
+        Account byEmail = accountRepository.findByEmail(email);
+
+        generateEmailLoginToken(byEmail);
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject("스터디올레, 패스워드없이 로그인 이메일");
+        mailMessage.setText("/email-login-token?token=" + byEmail.getEmailLoginToken() +
+                "&email=" + email);
+        javaMailSender.send(mailMessage);
+    }
+
+    public void generateEmailLoginToken(Account byEmail) {
+        byEmail.generateEmailLoginToken();
+        accountRepository.save(byEmail);
+    }
 }

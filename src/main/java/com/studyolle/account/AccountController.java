@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -48,6 +49,8 @@ public class AccountController {
         Account account = accountRepository.findByEmail(email);
         String view = "account/checked-email";
 
+        System.out.println("account.getEmail() = " + account.getEmail());
+        
         if (account == null) {
             model.addAttribute("error", "wrong.email");
             return view;
@@ -101,5 +104,34 @@ public class AccountController {
     @GetMapping("/email-login")
     public String loginByEmail(Model model) {
         return "account/email-login";
+    }
+
+    @PostMapping("/email-login")
+    public String sendEmailLoginMail(String email, Model model, RedirectAttributes attributes) {
+
+        if (!accountRepository.existsByEmail(email)) {
+            attributes.addFlashAttribute("error", "존재하지 않는 이메일입니다.");
+            return "redirect:/email-login";
+        }
+
+        accountService.sendLoginWithoutPasswordEmail(email);
+        attributes.addFlashAttribute("message", "이메일이 전송되었습니다. 메일을 확인해주세요.");
+
+        return "redirect:/email-login";
+    }
+
+    @GetMapping("/email-login-token")
+    public String emailLogin(String token, String email, Model model, RedirectAttributes attributes) {
+        Account account = accountRepository.findByEmail(email);
+
+        if (account == null || !account.isValidLoginToken(token)) {
+            attributes.addFlashAttribute("error", "올바르지 않은 메일정보입니다.");
+            return "redirect:/email-login";
+        }
+
+        accountService.login(account);
+        accountService.generateEmailLoginToken(account);
+
+        return "redirect:/";
     }
 }
