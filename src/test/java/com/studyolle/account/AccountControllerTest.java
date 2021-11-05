@@ -1,5 +1,6 @@
 package com.studyolle.account;
 
+import com.studyolle.WithAccount;
 import com.studyolle.domain.Account;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,9 @@ class AccountControllerTest {
     private MockMvc mockMvc;
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private AccountService accountService;
 
     @MockBean
     JavaMailSender javaMailSender;
@@ -98,5 +102,122 @@ class AccountControllerTest {
         assertNotNull(account.getEmailCheckToken());
         assertTrue(accountRepository.existsByEmail("today8934@email.com"));
         then(javaMailSender).should().send(any(SimpleMailMessage.class));
+    }
+
+    @DisplayName("이메일로 로그인 - 메일보내기")
+    @Test
+    @WithAccount("wook")
+    void sendLoginEmail() throws Exception {
+        String email = "today8934@gmail.com";
+
+        mockMvc.perform(post("/email-login")
+                .param("email", email)
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/email-login"))
+                .andExpect(flash().attributeExists("message"));
+
+        String emailLoginToken = accountRepository.findByEmail(email).getEmailLoginToken();
+
+        System.out.println("emailLoginToken = " + emailLoginToken);
+        assertNotNull(emailLoginToken);
+    }
+
+    @DisplayName("이메일로 로그인 - 메일 보내기 실패")
+    @Test
+    @WithAccount("wook")
+    void sendLoginEmail_error() throws Exception {
+        String email = "abcde@gmail.com";
+
+        mockMvc.perform(post("/email-login")
+                .param("email", email)
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/email-login"))
+                .andExpect(flash().attributeExists("error"));
+    }
+
+    @DisplayName("이메일로 로그인 - 로그인 성공")
+    @Test
+    void loginByEmail() throws Exception {
+        SignUpForm signUpForm = new SignUpForm();
+        signUpForm.setNickname("wook");
+        signUpForm.setEmail("today8934@gmail.com");
+        signUpForm.setPassword("12345678");
+
+        Account account = accountService.processNewAccount(signUpForm);
+
+        account.generateEmailLoginToken();
+
+        mockMvc.perform(get("/email-login-token")
+                .param("token", account.getEmailLoginToken())
+                .param("email", account.getEmail())
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(authenticated());
+    }
+
+    @DisplayName("이메일로 로그인 - 로그인 실패")
+    @Test
+    void loginByEmail_error() throws Exception {
+        SignUpForm signUpForm = new SignUpForm();
+        signUpForm.setNickname("wook");
+        signUpForm.setEmail("today8934@gmail.com");
+        signUpForm.setPassword("12345678");
+
+        Account account = accountService.processNewAccount(signUpForm);
+
+        account.generateEmailLoginToken();
+
+        //토큰이 다를때
+        mockMvc.perform(get("/email-login-token")
+                .param("token", "12345")
+                .param("email", account.getEmail())
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/email-login"))
+                .andExpect(unauthenticated());
+
+        //이메일이 다를때
+        mockMvc.perform(get("/email-login-token")
+                        .param("token", account.getEmailLoginToken())
+                        .param("email", "ggg@gmail.com")
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/email-login"))
+                .andExpect(unauthenticated());
+    }
+
+    @DisplayName("이메일로 로그인 - 이메일 토큰으로 한번이상 로그인 시")
+    @Test
+    void loginByEmail_more_than_once() throws Exception {
+        SignUpForm signUpForm = new SignUpForm();
+        signUpForm.setNickname("wook");
+        signUpForm.setEmail("today8934@gmail.com");
+        signUpForm.setPassword("12345678");
+
+        Account account = accountService.processNewAccount(signUpForm);
+
+        account.generateEmailLoginToken();
+
+        String token = account.getEmailLoginToken();
+
+        mockMvc.perform(get("/email-login-token")
+                        .param("token", token)
+                        .param("email", account.getEmail())
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"))
+                .andExpect(authenticated());
+
+        mockMvc.perform(get("/email-login-token")
+                .param("token", token)
+                .param("email", account.getEmail())
+                .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/email-login"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(unauthenticated());
     }
 }
