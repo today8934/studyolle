@@ -28,6 +28,10 @@ public class Account {
 
     private LocalDateTime emailCheckTokenGeneratedAt;
 
+    private String emailLoginToken;
+
+    private LocalDateTime emailLoginTokenGeneratedAt;
+
     private LocalDateTime joinedAt;
 
     private String bio;
@@ -58,6 +62,11 @@ public class Account {
         this.emailCheckTokenGeneratedAt = LocalDateTime.now();
     }
 
+    public void generateEmailLoginToken() {
+        this.emailLoginToken = UUID.randomUUID().toString();
+        this.emailLoginTokenGeneratedAt = LocalDateTime.now();
+    }
+
     public void completeSignUp() {
         this.emailVerified = true;
         this.joinedAt = LocalDateTime.now();
@@ -65,6 +74,10 @@ public class Account {
 
     public boolean isValidToken(String token) {
         return this.emailCheckToken.equals(token);
+    }
+
+    public boolean isValidLoginToken(String token) {
+        return this.emailLoginToken.equals(token);
     }
 
     public boolean canSendConfirmEmail() {
