@@ -3,6 +3,7 @@ package com.studyolle.settings;
 import com.studyolle.account.AccountService;
 import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
+import com.studyolle.domain.Tag;
 import com.studyolle.settings.form.NicknameForm;
 import com.studyolle.settings.form.Notifications;
 import com.studyolle.settings.form.PasswordForm;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -153,7 +155,12 @@ public class SettingsController {
     @PostMapping(SETTINGS_TAG_URL)
     @ResponseBody
     public String createTags(@CurrentUser Account account, @RequestBody String title) {
-
+        Optional<Tag> byTitle = tagRepository.findByTitle(title);
+        byTitle.orElseGet(() -> {
+            accountService.saveTag(account, Tag.builder()
+                    .title(title)
+                    .build());
+        });
 
 
         return SETTINGS_TAG_VIEW_NAME;

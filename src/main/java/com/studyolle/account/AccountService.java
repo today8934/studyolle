@@ -1,6 +1,7 @@
 package com.studyolle.account;
 
 import com.studyolle.domain.Account;
+import com.studyolle.domain.Tag;
 import com.studyolle.settings.form.NicknameForm;
 import com.studyolle.settings.form.Notifications;
 import com.studyolle.settings.form.Profile;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -132,5 +135,13 @@ public class AccountService implements UserDetailsService {
     public void generateEmailLoginToken(Account byEmail) {
         byEmail.generateEmailLoginToken();
         accountRepository.save(byEmail);
+    }
+
+    public void saveTag(Account account, Tag tag) {
+        Set<Tag> tags = account.getTags();
+        tags.add(tag);
+        account.setTags(tags);
+
+        accountRepository.save(account);
     }
 }
