@@ -5,6 +5,7 @@ import com.studyolle.domain.Tag;
 import com.studyolle.settings.form.NicknameForm;
 import com.studyolle.settings.form.Notifications;
 import com.studyolle.settings.form.Profile;
+import com.studyolle.settings.form.TagForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.mail.SimpleMailMessage;
@@ -138,10 +139,17 @@ public class AccountService implements UserDetailsService {
     }
 
     public void saveTag(Account account, Tag tag) {
-        Set<Tag> tags = account.getTags();
-        tags.add(tag);
-        account.setTags(tags);
+        Optional<Account> byId = accountRepository.findById(account.getId());
+        byId.ifPresent(a -> a.getTags().add(tag));
+    }
 
-        accountRepository.save(account);
+    public Set<Tag> getTag(Account account) {
+        Optional<Account> byId = accountRepository.findById(account.getId());
+        return byId.orElseThrow().getTags();
+    }
+
+    public void removeTag(Account account, Tag tag) {
+        Optional<Account> byId = accountRepository.findById(account.getId());
+        byId.ifPresent(a -> a.getTags().remove(tag));
     }
 }

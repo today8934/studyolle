@@ -4,15 +4,13 @@ import com.studyolle.account.AccountService;
 import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Tag;
-import com.studyolle.settings.form.NicknameForm;
-import com.studyolle.settings.form.Notifications;
-import com.studyolle.settings.form.PasswordForm;
-import com.studyolle.settings.form.Profile;
+import com.studyolle.settings.form.*;
 import com.studyolle.settings.validator.NicknameFormValidator;
 import com.studyolle.settings.validator.PasswordFormValidator;
 import com.studyolle.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
@@ -22,6 +20,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Controller
 @RequiredArgsConstructor
@@ -147,22 +147,34 @@ public class SettingsController {
     @GetMapping(SETTINGS_TAG_URL)
     public String updateTags(@CurrentUser Account account, Model model) {
         model.addAttribute(account);
-        System.out.println("account = " + account.getTags());
+        model.addAttribute("tags"
+                , accountService.getTag(account).stream().map(Tag::getTitle).collect(Collectors.toList()));
 
         return SETTINGS_TAG_VIEW_NAME;
     }
 
-    @PostMapping(SETTINGS_TAG_URL)
+    @PostMapping("/settings/tags/add")
     @ResponseBody
-    public String createTags(@CurrentUser Account account, @RequestBody String title) {
-        Optional<Tag> byTitle = tagRepository.findByTitle(title);
-        byTitle.orElseGet(() -> {
-            accountService.saveTag(account, Tag.builder()
-                    .title(title)
-                    .build());
+    public ResponseEntity addTag(@CurrentUser Account account, @RequestBody TagForm tagForm) {
+        Optional<Tag> byTitle = tagRepository.findByTitle(tagForm.getTitle());
+        Tag tag = byTitle.orElseGet(() -> tagRepository.save(Tag.builder()
+                .title(tagForm.getTitle())
+                .build()));
+
+        accountService.saveTag(account, tag);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/settings/tags/remove")
+    @ResponseBody
+    public ResponseEntity removeTag(@CurrentUser Account account, @RequestBody TagForm tagForm) {
+        Optional<Tag> byTitle = tagRepository.findByTitle(tagForm.getTitle());
+        byTitle.ifPresent(tag -> {
+            accountService.removeTag(account, tag);
+            tagRepository.delete(tag);
         });
 
-
-        return SETTINGS_TAG_VIEW_NAME;
+        return ResponseEntity.ok().build();
     }
 }

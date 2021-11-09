@@ -47,8 +47,8 @@
                     },
                     contentType: "application/json; charset=utf-8",
                     method: "POST",
-                    url: "/settings/tags",
-                    data: JSON.stringify({'tagTitle': tagTitle})
+                    url: "/settings/tags" + url,
+                    data: JSON.stringify({'title': tagTitle})
                 }).done(function (data, status) {
                     console.log("${data} and status is ${status}");
                 });
