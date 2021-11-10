@@ -172,7 +172,6 @@ public class SettingsController {
         Optional<Tag> byTitle = tagRepository.findByTitle(tagForm.getTitle());
         byTitle.ifPresent(tag -> {
             accountService.removeTag(account, tag);
-            tagRepository.delete(tag);
         });
 
         return ResponseEntity.ok().build();
