@@ -36,7 +36,6 @@ public class AccountService implements UserDetailsService {
 
     public Account processNewAccount(SignUpForm signUpForm) {
         Account newAccount = saveNewAccount(signUpForm);
-        newAccount.generateEmailCheckToken();
         sendSignUpConfirmEmail(newAccount);
         return newAccount;
     }
@@ -48,17 +47,17 @@ public class AccountService implements UserDetailsService {
     }
 
     private Account saveNewAccount(SignUpForm signUpForm) {
-        Account account = Account.builder()
-                .email(signUpForm.getEmail())
-                .nickname(signUpForm.getNickname())
-                .password(passwordEncoder.encode(signUpForm.getPassword())) //TODO encoding 해야함
-                .studyCreatedByWeb(true)
-                .studyEnrollmentResultByWeb(true)
-                .studyUpdatedByWeb(true)
-                .build();
+        signUpForm.setPassword(passwordEncoder.encode(signUpForm.getPassword()));
 
-        Account newAccount = accountRepository.save(account);
-        return newAccount;
+        Account account = modelMapper.map(signUpForm, Account.class);
+
+        account.setPassword(passwordEncoder.encode(signUpForm.getPassword()));
+        account.setStudyCreatedByWeb(true);
+        account.setStudyEnrollmentResultByWeb(true);
+        account.setStudyUpdatedByWeb(true);
+        account.generateEmailCheckToken();
+
+        return accountRepository.save(account);
     }
 
     private void sendSignUpConfirmEmail(Account newAccount) {
