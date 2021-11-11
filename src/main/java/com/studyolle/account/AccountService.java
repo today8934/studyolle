@@ -61,7 +61,7 @@ public class AccountService implements UserDetailsService {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(newAccount.getEmail());
         mailMessage.setSubject("스터디올래, 회원 가입 인증");
-        mailMessage.setText("/check-email-token?token=" + newAccount.getEmailCheckToken() +
+        mailMessage.setText("http://localhost:8080/check-email-token?token=" + newAccount.getEmailCheckToken() +
                 "&email=" + newAccount.getEmail());
         javaMailSender.send(mailMessage);
     }
