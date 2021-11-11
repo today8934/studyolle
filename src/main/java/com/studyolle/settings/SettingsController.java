@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Controller
 @RequiredArgsConstructor
@@ -193,10 +194,13 @@ public class SettingsController {
 
         List<String> accountZones = accountService.getZones(account)
                 .stream()
-                .map(Zone::getLocalNameOfCity).collect(Collectors.toList());
+                .map(m -> m.getCity() + "(" + m.getLocalNameOfCity() + ")/" + m.getProvince())
+                .collect(Collectors.toList());
+
         List<String> zonesList = zoneRepository.findAll()
                 .stream()
-                .map(Zone::getLocalNameOfCity).collect(Collectors.toList());
+                .map(m -> m.getCity() + "(" + m.getLocalNameOfCity() + ")/" + m.getProvince())
+                .collect(Collectors.toList());
 
         model.addAttribute("account", account);
         model.addAttribute("whitelist", objectMapper.writeValueAsString(zonesList));
@@ -207,7 +211,9 @@ public class SettingsController {
     @PostMapping(SETTINGS_ZONES_URL + "/add")
     @ResponseBody
     public ResponseEntity addZones(@CurrentUser Account account, @RequestBody ZoneForm zoneForm) {
-        Optional<Zone> zone = zoneRepository.findByLocalNameOfCity(zoneForm.getZoneName());
+        Optional<Zone> zone = zoneRepository.findByCityAndLocalNameOfCity(
+                zoneForm.getCity(zoneForm.getZoneName())
+                , zoneForm.getLocalNameOfCity(zoneForm.getZoneName()));
         zone.ifPresent(z -> accountService.addZones(account, z));
         return ResponseEntity.ok().build();
     }
@@ -215,7 +221,9 @@ public class SettingsController {
     @PostMapping(SETTINGS_ZONES_URL + "/remove")
     @ResponseBody
     public ResponseEntity removeZones(@CurrentUser Account account, @RequestBody ZoneForm zoneForm) {
-        Optional<Zone> zone = zoneRepository.findByLocalNameOfCity(zoneForm.getZoneName());
+        Optional<Zone> zone = zoneRepository.findByCityAndLocalNameOfCity(
+                zoneForm.getCity(zoneForm.getZoneName())
+                , zoneForm.getLocalNameOfCity(zoneForm.getZoneName()));
         zone.ifPresent(z -> accountService.removeZones(account, z));
         return ResponseEntity.ok().build();
     }
