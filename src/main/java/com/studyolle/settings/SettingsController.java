@@ -212,8 +212,8 @@ public class SettingsController {
     @ResponseBody
     public ResponseEntity addZones(@CurrentUser Account account, @RequestBody ZoneForm zoneForm) {
         Optional<Zone> zone = zoneRepository.findByCityAndLocalNameOfCity(
-                zoneForm.getCity(zoneForm.getZoneName())
-                , zoneForm.getLocalNameOfCity(zoneForm.getZoneName()));
+                zoneForm.getCity()
+                , zoneForm.getLocalNameOfCity());
         zone.ifPresent(z -> accountService.addZones(account, z));
         return ResponseEntity.ok().build();
     }
@@ -222,8 +222,8 @@ public class SettingsController {
     @ResponseBody
     public ResponseEntity removeZones(@CurrentUser Account account, @RequestBody ZoneForm zoneForm) {
         Optional<Zone> zone = zoneRepository.findByCityAndLocalNameOfCity(
-                zoneForm.getCity(zoneForm.getZoneName())
-                , zoneForm.getLocalNameOfCity(zoneForm.getZoneName()));
+                zoneForm.getCity()
+                , zoneForm.getLocalNameOfCity());
         zone.ifPresent(z -> accountService.removeZones(account, z));
         return ResponseEntity.ok().build();
     }

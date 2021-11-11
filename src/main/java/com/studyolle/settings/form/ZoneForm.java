@@ -7,11 +7,15 @@ public class ZoneForm {
 
     private String zoneName;
 
-    public String getCity(String zoneName) {
-        return zoneName.split("\\(")[0];
+    public String getCity() {
+        return this.zoneName.split("\\(")[0];
     }
 
-    public String getLocalNameOfCity(String zoneName) {
-        return zoneName.split("\\(")[1].split("\\)")[0];
+    public String getLocalNameOfCity() {
+        return this.zoneName.split("\\(")[1].split("\\)")[0];
+    }
+
+    public String getProvince() {
+        return this.zoneName.split("\\(")[1].split("\\)")[1];
     }
 }

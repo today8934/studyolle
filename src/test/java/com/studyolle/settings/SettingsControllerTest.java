@@ -6,8 +6,11 @@ import com.studyolle.account.AccountRepository;
 import com.studyolle.account.AccountService;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Tag;
+import com.studyolle.domain.Zone;
 import com.studyolle.settings.form.TagForm;
+import com.studyolle.settings.form.ZoneForm;
 import com.studyolle.tag.TagRepository;
+import com.studyolle.zone.ZoneRepository;
 import jdk.jshell.spi.ExecutionControlProvider;
 import lombok.ToString;
 import org.junit.jupiter.api.AfterEach;
@@ -21,7 +24,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -52,6 +58,9 @@ class SettingsControllerTest {
 
     @Autowired
     TagRepository tagRepository;
+    
+    @Autowired
+    ZoneRepository zoneRepository;
 
     @AfterEach()
     void afterEach() {
@@ -85,8 +94,6 @@ class SettingsControllerTest {
         Optional<Tag> newTag = tagRepository.findByTitle("newTag");
         assertNotNull(newTag);
         Account wook = accountRepository.findByNickname("wook");
-        System.out.println("wook.getTags() = " + wook.getTags());
-        System.out.println("newTag = " + newTag);
 
         assertTrue(wook.getTags().contains(newTag.get()));
     }
@@ -111,6 +118,72 @@ class SettingsControllerTest {
                 .andExpect(status().isOk());
 
         assertFalse(wook.getTags().contains(newTag));
+    }
+
+    @DisplayName("활동지역 폼")
+    @Test
+    @WithAccount("wook")
+    void updateZonesForm() throws Exception {
+        mockMvc.perform(get(SettingsController.SETTINGS_ZONES_URL))
+                .andExpect(view().name(SettingsController.SETTINGS_ZONES_VIEW_NAME))
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("zones"))
+                .andExpect(model().attributeExists("whitelist"));
+
+        String zoneName = "Goyang(고양시)/Gyeonggi";
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName(zoneName);
+
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+        assertNotNull(byCityAndLocalNameOfCity.get());
+
+        assertTrue(zoneForm.getCity().equals("Goyang"));
+        assertTrue(zoneForm.getLocalNameOfCity().equals("고양시"));
+    }
+
+    @DisplayName("활동지역 추가")
+    @Test
+    @WithAccount("wook")
+    void addZones() throws Exception {
+        String zoneName = "Goyang(고양시)/Gyeonggi";
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName(zoneName);
+
+        mockMvc.perform(post(SettingsController.SETTINGS_ZONES_URL + "/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(zoneForm))
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        Account wook = accountRepository.findByNickname("wook");
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+
+        byCityAndLocalNameOfCity.orElseThrow();
+
+        assertTrue(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
+    }
+
+    @DisplayName("활동지역 삭제")
+    @Test
+    @WithAccount("wook")
+    void removeZones() throws Exception {
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName("Goyang(고양시)/gyeonggi");
+
+        Optional<Zone> zone = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+
+        Account wook = accountRepository.findByNickname("wook");
+        accountService.addZones(wook, zone.get());
+
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+
+        byCityAndLocalNameOfCity.orElseThrow();
+
+        assertTrue(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
+
+        accountService.removeZones(wook, zone.get());
+
+        assertFalse(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
     }
 
     @DisplayName("프로필 수정 폼")
