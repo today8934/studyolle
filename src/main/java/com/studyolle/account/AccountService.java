@@ -50,6 +50,9 @@ public class AccountService implements UserDetailsService {
     private Account saveNewAccount(@Valid SignUpForm signUpForm) {
         signUpForm.setPassword(passwordEncoder.encode(signUpForm.getPassword()));
         Account account = modelMapper.map(signUpForm, Account.class);
+        account.setStudyUpdatedByWeb(true);
+        account.setStudyEnrollmentResultByWeb(true);
+        account.setStudyCreatedByWeb(true);
         account.generateEmailCheckToken();
         return accountRepository.save(account);
     }
