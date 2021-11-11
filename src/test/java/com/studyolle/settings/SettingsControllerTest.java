@@ -1,17 +1,25 @@
 package com.studyolle.settings;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyolle.WithAccount;
 import com.studyolle.account.AccountRepository;
 import com.studyolle.account.AccountService;
 import com.studyolle.domain.Account;
+import com.studyolle.domain.Tag;
+import com.studyolle.settings.form.TagForm;
+import com.studyolle.tag.TagRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -21,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 class SettingsControllerTest {
 
     @Autowired
@@ -35,9 +44,45 @@ class SettingsControllerTest {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    TagRepository tagRepository;
+
     @AfterEach()
     void afterEach() {
         accountRepository.deleteAll();
+    }
+
+    @DisplayName("태그 폼")
+    @Test
+    @WithAccount("wook")
+    void updateTagForm() throws Exception {
+        mockMvc.perform(get(SettingsController.SETTINGS_TAG_URL))
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("tags"))
+                .andExpect(view().name(SettingsController.SETTINGS_TAG_VIEW_NAME));
+    }
+
+    @DisplayName("태그 추가")
+    @Test
+    @WithAccount("wook")
+    void addTag() throws Exception {
+        TagForm tagForm = new TagForm();
+        tagForm.setTitle("Hibernate");
+
+        mockMvc.perform(post(SettingsController.SETTINGS_TAG_URL + "/add")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(tagForm))
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        Optional<Tag> byTitle = tagRepository.findByTitle(tagForm.getTitle());
+
+        Account wook = accountRepository.findByNickname("wook");
+
+        assertTrue(wook.getTags().contains(byTitle.get()));
     }
 
     @DisplayName("프로필 수정 폼")
