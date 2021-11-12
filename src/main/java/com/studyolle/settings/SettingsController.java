@@ -6,10 +6,12 @@ import com.studyolle.account.AccountService;
 import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Tag;
+import com.studyolle.domain.Zone;
 import com.studyolle.settings.form.*;
 import com.studyolle.settings.validator.NicknameFormValidator;
 import com.studyolle.settings.validator.PasswordFormValidator;
 import com.studyolle.tag.TagRepository;
+import com.studyolle.zone.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -41,11 +43,14 @@ public class SettingsController {
     static final String SETTINGS_ACCOUNT_URL = "/settings/account";
     static final String SETTINGS_TAG_VIEW_NAME ="settings/tags";
     static final String SETTINGS_TAG_URL = "/settings/tags";
+    static final String SETTINGS_ZONE_URL = "/settings/zones";
+    static final String SETTINGS_ZONE_VIEW_NAME = "settings/zones";
 
     private final AccountService accountService;
     private final ModelMapper modelMapper;
     private final NicknameFormValidator nicknameFormValidator;
     private final TagRepository tagRepository;
+    private final ZoneRepository zoneRepository;
     private final ObjectMapper objectMapper;
 
     @InitBinder("passwordForm")
@@ -183,6 +188,40 @@ public class SettingsController {
             accountService.removeTag(account, tag);
         });
 
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(SETTINGS_ZONE_URL)
+    public String zoneForm(@CurrentUser Account account, Model model) throws JsonProcessingException {
+
+        Set<Zone> zones = accountService.getZones(account);
+        List<String> strings = zoneRepository.findAll().stream()
+                .map(m -> m.getCity() + "(" + m.getLocalNameOfCity() + ")/" + m.getProvince())
+                .collect(Collectors.toList());
+
+        model.addAttribute(account);
+        model.addAttribute("zones", zones.stream()
+                .map(m -> m.getCity() + "(" + m.getLocalNameOfCity() + ")/" + m.getProvince()).collect(Collectors.toList()));
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(strings));
+
+        return SETTINGS_ZONE_VIEW_NAME;
+    }
+
+    @PostMapping(SETTINGS_ZONE_URL + "/add")
+    @ResponseBody
+    public ResponseEntity addZone(@CurrentUser Account account, @RequestBody ZoneForm zoneForm) {
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+        Zone zone = byCityAndLocalNameOfCity.orElseThrow();
+        accountService.saveZone(account, zone);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(SETTINGS_ZONE_URL + "/remove")
+    @ResponseBody
+    public ResponseEntity removeZone(@CurrentUser Account account, @RequestBody ZoneForm zoneForm) {
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+        Zone zone = byCityAndLocalNameOfCity.orElseThrow();
+        accountService.removeZone(account, zone);
         return ResponseEntity.ok().build();
     }
 }

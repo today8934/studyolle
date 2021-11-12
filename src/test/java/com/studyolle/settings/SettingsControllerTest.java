@@ -6,8 +6,11 @@ import com.studyolle.account.AccountRepository;
 import com.studyolle.account.AccountService;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Tag;
+import com.studyolle.domain.Zone;
 import com.studyolle.settings.form.TagForm;
+import com.studyolle.settings.form.ZoneForm;
 import com.studyolle.tag.TagRepository;
+import com.studyolle.zone.ZoneRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,9 +53,43 @@ class SettingsControllerTest {
     @Autowired
     TagRepository tagRepository;
 
+    @Autowired
+    ZoneRepository zoneRepository;
+
     @AfterEach()
     void afterEach() {
         accountRepository.deleteAll();
+    }
+
+    @DisplayName("지역 폼")
+    @Test
+    @WithAccount("wook")
+    void zoneForm() throws Exception {
+        mockMvc.perform(get(SettingsController.SETTINGS_ZONE_URL))
+                .andExpect(model().attributeExists("account"))
+                .andExpect(model().attributeExists("zones"))
+                .andExpect(model().attributeExists("whitelist"))
+                .andExpect(view().name(SettingsController.SETTINGS_ZONE_VIEW_NAME));
+    }
+
+    @DisplayName("지역 추가")
+    @Test
+    @WithAccount("wook")
+    void addZone() throws Exception {
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName("Goyang(고양시)/gyeonggi");
+
+        mockMvc.perform(post(SettingsController.SETTINGS_ZONE_URL + "/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(zoneForm))
+                        .with(csrf()))
+                .andExpect(status().isOk());
+
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+
+        Account wook = accountRepository.findByNickname("wook");
+
+        assertTrue(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
     }
 
     @DisplayName("태그 폼")
@@ -83,6 +120,33 @@ class SettingsControllerTest {
         Account wook = accountRepository.findByNickname("wook");
 
         assertTrue(wook.getTags().contains(byTitle.get()));
+    }
+
+    @DisplayName("태그 삭제")
+    @Test
+    @WithAccount("wook")
+    void removeTag() throws Exception {
+        Account wook = accountRepository.findByNickname("wook");
+
+        Optional<Tag> byTitle = tagRepository.findByTitle("Hibernate");
+        Tag hibernate = byTitle.orElseGet(() -> tagRepository.save(Tag.builder()
+                .title("Hibernate")
+                .build()));
+
+        accountService.saveTag(wook, hibernate);
+
+        assertTrue(wook.getTags().contains(hibernate));
+
+        TagForm tagForm = new TagForm();
+        tagForm.setTitle("Hibernate");
+
+        mockMvc.perform(post(SettingsController.SETTINGS_TAG_URL + "/remove")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(tagForm))
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        assertFalse(wook.getTags().contains(hibernate));
     }
 
     @DisplayName("프로필 수정 폼")
