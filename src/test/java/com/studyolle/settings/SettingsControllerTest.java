@@ -92,6 +92,30 @@ class SettingsControllerTest {
         assertTrue(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
     }
 
+    @DisplayName("지역 삭제")
+    @Test
+    @WithAccount("wook")
+    void removeZone() throws Exception {
+        Account wook = accountRepository.findByNickname("wook");
+
+        ZoneForm zoneForm = new ZoneForm();
+        zoneForm.setZoneName("Goyang(고양시)/gyeonggi");
+
+        Optional<Zone> byCityAndLocalNameOfCity = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity());
+
+        byCityAndLocalNameOfCity.ifPresent(z -> accountService.saveZone(wook, z));
+
+        assertTrue(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
+
+        mockMvc.perform(post(SettingsController.SETTINGS_ZONE_URL + "/remove")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(zoneForm))
+                .with(csrf()))
+                .andExpect(status().isOk());
+
+        assertFalse(wook.getZones().contains(byCityAndLocalNameOfCity.get()));
+    }
+
     @DisplayName("태그 폼")
     @Test
     @WithAccount("wook")
