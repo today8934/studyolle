@@ -50,6 +50,9 @@ public class AccountService implements UserDetailsService {
     private Account saveNewAccount(@Valid SignUpForm signUpForm) {
         signUpForm.setPassword(passwordEncoder.encode(signUpForm.getPassword()));
         Account account = modelMapper.map(signUpForm, Account.class);
+        account.setStudyUpdatedByWeb(true);
+        account.setStudyEnrollmentResultByWeb(true);
+        account.setStudyCreatedByWeb(true);
         account.generateEmailCheckToken();
         return accountRepository.save(account);
     }
@@ -58,7 +61,7 @@ public class AccountService implements UserDetailsService {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(newAccount.getEmail());
         mailMessage.setSubject("스터디올래, 회원 가입 인증");
-        mailMessage.setText("/check-email-token?token=" + newAccount.getEmailCheckToken() +
+        mailMessage.setText("http://localhost:8080/check-email-token?token=" + newAccount.getEmailCheckToken() +
                 "&email=" + newAccount.getEmail());
         javaMailSender.send(mailMessage);
     }
@@ -121,7 +124,7 @@ public class AccountService implements UserDetailsService {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(email);
         mailMessage.setSubject("스터디올레, 패스워드없이 로그인 이메일");
-        mailMessage.setText("/email-login-token?token=" + byEmail.getEmailLoginToken() +
+        mailMessage.setText("http://localhost:8080/email-login-token?token=" + byEmail.getEmailLoginToken() +
                 "&email=" + email);
         javaMailSender.send(mailMessage);
     }
