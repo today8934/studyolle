@@ -3,13 +3,13 @@ package com.studyolle.account;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Tag;
 import com.studyolle.domain.Zone;
+import com.studyolle.mail.EmailForm;
+import com.studyolle.mail.EmailService;
 import com.studyolle.settings.form.NicknameForm;
 import com.studyolle.settings.form.Notifications;
 import com.studyolle.settings.form.Profile;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,9 +31,9 @@ import java.util.Set;
 public class AccountService implements UserDetailsService {
 
     private final AccountRepository accountRepository;
-    private final JavaMailSender javaMailSender;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
+    private final EmailService emailService;
 
     public Account processNewAccount(SignUpForm signUpForm) {
         Account newAccount = saveNewAccount(signUpForm);
@@ -58,12 +58,14 @@ public class AccountService implements UserDetailsService {
     }
 
     private void sendSignUpConfirmEmail(Account newAccount) {
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(newAccount.getEmail());
-        mailMessage.setSubject("스터디올래, 회원 가입 인증");
-        mailMessage.setText("http://localhost:8080/check-email-token?token=" + newAccount.getEmailCheckToken() +
-                "&email=" + newAccount.getEmail());
-        javaMailSender.send(mailMessage);
+        EmailForm emailForm = EmailForm.builder()
+                .to(newAccount.getEmail())
+                .subject("스터디올레, 회원 가입 인증")
+                .message("http://localhost:8080/check-email-token?token=" + newAccount.getEmailCheckToken() +
+                        "&email=" + newAccount.getEmail())
+                .build();
+
+        emailService.send(emailForm);
     }
 
     public void login(Account account) {
@@ -121,12 +123,14 @@ public class AccountService implements UserDetailsService {
 
         generateEmailLoginToken(byEmail);
 
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(email);
-        mailMessage.setSubject("스터디올레, 패스워드없이 로그인 이메일");
-        mailMessage.setText("http://localhost:8080/email-login-token?token=" + byEmail.getEmailLoginToken() +
-                "&email=" + email);
-        javaMailSender.send(mailMessage);
+        EmailForm emailForm = EmailForm.builder()
+                .to(email)
+                .subject("스터디올레, 패스워드없이 로그인 이메일")
+                .message("http://localhost:8080/email-login-token?token=" + byEmail.getEmailLoginToken() +
+                        "&email=" + email)
+                .build();
+
+        emailService.send(emailForm);
     }
 
     public void generateEmailLoginToken(Account byEmail) {
