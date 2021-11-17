@@ -57,6 +57,16 @@ public class StudySettingsController {
         return "redirect:/study/" + getPath(path) + "/settings/description";
     }
 
+    @GetMapping("/banner")
+    public String bannerForm(@CurrentUser Account account, @PathVariable String path, Model model) {
+        Study study = studyService.getStudyToUpdate(account, path);
+
+        model.addAttribute(account);
+        model.addAttribute(study);
+
+        return "study/settings/banner";
+    }
+
     private String getPath(String path) {
         return URLEncoder.encode(path, StandardCharsets.UTF_8);
     }
