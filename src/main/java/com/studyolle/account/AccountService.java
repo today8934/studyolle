@@ -189,4 +189,8 @@ public class AccountService implements UserDetailsService {
         Optional<Account> byId = accountRepository.findById(account.getId());
         byId.ifPresent(a -> a.getZones().remove(zone));
     }
+
+    public Account getAccount(String nickname) {
+        return accountRepository.findByNickname(nickname);
+    }
 }
