@@ -4,15 +4,14 @@ import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Study;
 import com.studyolle.study.form.StudyDescriptionForm;
+import com.studyolle.study.validator.StudyDescriptionFormValidator;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
@@ -26,6 +25,12 @@ public class StudySettingsController {
 
     private final StudyService studyService;
     private final ModelMapper modelMapper;
+    private final StudyDescriptionFormValidator studyDescriptionFormValidator;
+
+    @InitBinder("studyDescriptionForm")
+    public void studyDescriptionFormInitBinder(WebDataBinder webDataBinder) {
+        webDataBinder.addValidators(studyDescriptionFormValidator);
+    }
 
     @GetMapping("/description")
     public String descriptionForm(@CurrentUser Account account, @PathVariable String path, Model model) {
@@ -63,6 +68,21 @@ public class StudySettingsController {
 
         model.addAttribute(account);
         model.addAttribute(study);
+
+        return "study/settings/banner";
+    }
+
+    @PostMapping("/banner/{bannerUse}")
+    public String bannerUseSetting(@CurrentUser Account account
+            , @PathVariable String path, @PathVariable String bannerUse, Model model, RedirectAttributes attributes) {
+
+        Study study = studyService.getStudyToUpdate(account, path);
+        studyService.updateBannerUse(study, bannerUse);
+
+        model.addAttribute(account);
+        model.addAttribute(study);
+
+        attributes.addFlashAttribute("message", "배너 사용상태가 변경되었습니다.");
 
         return "study/settings/banner";
     }

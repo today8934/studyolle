@@ -82,6 +82,6 @@ public class Study {
     }
 
     public String getImage() {
-        return this.image != null ? image : "/images/default-banner.png";
+        return this.image != null ? image : "/images/default_banner.png";
     }
 }
