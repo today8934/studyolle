@@ -3,6 +3,8 @@ package com.studyolle.study;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Study;
 import com.studyolle.domain.Tag;
+import com.studyolle.domain.Zone;
+import com.studyolle.settings.form.ZoneForm;
 import com.studyolle.study.form.StudyDescriptionForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -49,11 +51,7 @@ public class StudyService {
     }
 
     public void updateBannerUse(Study study, String bannerUse) {
-        if (bannerUse.equals("enable")) {
-            study.setUseBanner(true);
-        } else {
-            study.setUseBanner(false);
-        }
+        study.setUseBanner(bannerUse.equals("enable"));
     }
 
     public void updateStudyImage(Study study, String image) {
@@ -66,5 +64,13 @@ public class StudyService {
 
     public void removeStudyTags(Study study, Tag tag) {
         study.getTags().remove(tag);
+    }
+
+    public void addStudyZones(Study study, Zone zone) {
+        study.getZones().add(zone);
+    }
+
+    public void removeStudyZones(Study study, Zone zone) {
+        study.getZones().remove(zone);
     }
 }
