@@ -6,10 +6,13 @@ import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Study;
 import com.studyolle.domain.Tag;
+import com.studyolle.domain.Zone;
 import com.studyolle.settings.form.TagForm;
+import com.studyolle.settings.form.ZoneForm;
 import com.studyolle.study.form.StudyDescriptionForm;
 import com.studyolle.study.validator.StudyDescriptionFormValidator;
 import com.studyolle.tag.TagRepository;
+import com.studyolle.zone.ZoneRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +39,7 @@ public class StudySettingsController {
     private final ModelMapper modelMapper;
     private final StudyDescriptionFormValidator studyDescriptionFormValidator;
     private final TagRepository tagRepository;
+    private final ZoneRepository zoneRepository;
     private final ObjectMapper objectMapper;
 
     @InitBinder("studyDescriptionForm")
@@ -135,10 +139,6 @@ public class StudySettingsController {
         return ResponseEntity.ok().build();
     }
 
-    private String getPath(String path) {
-        return URLEncoder.encode(path, StandardCharsets.UTF_8);
-    }
-
     @PostMapping("/tags/remove")
     public ResponseEntity removeStudyTag(@CurrentUser Account account, @PathVariable String path
             , @RequestBody TagForm tagForm) {
@@ -150,4 +150,52 @@ public class StudySettingsController {
 
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/zones")
+    public String zonesForm(@CurrentUser Account account, @PathVariable String path, Model model) throws JsonProcessingException {
+        Study study = studyService.getStudyToUpdate(account, path);
+
+        List<String> allZones = zoneRepository.findAll()
+                .stream()
+                .map(m -> m.getCity() + "(" + m.getLocalNameOfCity() + ")/" + m.getProvince()).collect(Collectors.toList());
+
+        List<Object> studyZones = study.getZones()
+                .stream()
+                .map(m -> m.getCity() + "(" + m.getLocalNameOfCity() + ")/" + m.getProvince()).collect(Collectors.toList());
+
+        model.addAttribute(account);
+        model.addAttribute(study);
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(allZones));
+        model.addAttribute("zones", studyZones);
+
+        return "study/settings/zones";
+    }
+
+    @PostMapping("/zones/add")
+    public ResponseEntity addStudyZones(@CurrentUser Account account, @PathVariable String path
+            , @RequestBody ZoneForm zoneForm, Model model) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        Zone zone = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity()).orElseThrow();
+
+        studyService.addStudyZones(study, zone);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/zones/remove")
+    public ResponseEntity removeStudyZones(@CurrentUser Account account, @PathVariable String path
+            , @RequestBody ZoneForm zoneForm, Model model) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        Zone zone = zoneRepository.findByCityAndLocalNameOfCity(zoneForm.getCity(), zoneForm.getLocalNameOfCity()).orElseThrow();
+
+        studyService.removeStudyZones(study, zone);
+
+        return ResponseEntity.ok().build();
+    }
+
+    private String getPath(String path) {
+        return URLEncoder.encode(path, StandardCharsets.UTF_8);
+    }
+
+
 }
