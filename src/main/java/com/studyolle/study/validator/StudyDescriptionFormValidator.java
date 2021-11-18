@@ -1,9 +1,11 @@
 package com.studyolle.study.validator;
 
 import com.studyolle.study.form.StudyDescriptionForm;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
+@Component
 public class StudyDescriptionFormValidator implements Validator {
     @Override
     public boolean supports(Class<?> clazz) {

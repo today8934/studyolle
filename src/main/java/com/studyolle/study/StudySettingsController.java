@@ -72,6 +72,15 @@ public class StudySettingsController {
         return "study/settings/banner";
     }
 
+    @PostMapping("/banner")
+    public String updateBannserImage(@CurrentUser Account account, @PathVariable String path, String image
+            , RedirectAttributes attributes) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        studyService.updateStudyImage(study, image);
+        attributes.addFlashAttribute("message", "스터디 이미지를 수정했습니다.");
+        return "redirect:/study/" + getPath(path) + "/settings/banner";
+    }
+
     @PostMapping("/banner/{bannerUse}")
     public String bannerUseSetting(@CurrentUser Account account
             , @PathVariable String path, @PathVariable String bannerUse, Model model, RedirectAttributes attributes) {

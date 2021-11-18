@@ -52,4 +52,8 @@ public class StudyService {
             study.setUseBanner(false);
         }
     }
+
+    public void updateStudyImage(Study study, String image) {
+        study.setImage(image);
+    }
 }
