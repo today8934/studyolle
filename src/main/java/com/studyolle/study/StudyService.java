@@ -60,7 +60,11 @@ public class StudyService {
         study.setImage(image);
     }
 
-    public void updateStudyTags(Study study, Tag tag) {
+    public void addStudyTags(Study study, Tag tag) {
         study.getTags().add(tag);
+    }
+
+    public void removeStudyTags(Study study, Tag tag) {
+        study.getTags().remove(tag);
     }
 }

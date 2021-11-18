@@ -130,12 +130,24 @@ public class StudySettingsController {
                 .title(tagForm.getTagTitle())
                 .build()));
 
-        studyService.updateStudyTags(study, tag);
+        studyService.addStudyTags(study, tag);
 
         return ResponseEntity.ok().build();
     }
 
     private String getPath(String path) {
         return URLEncoder.encode(path, StandardCharsets.UTF_8);
+    }
+
+    @PostMapping("/tags/remove")
+    public ResponseEntity removeStudyTag(@CurrentUser Account account, @PathVariable String path
+            , @RequestBody TagForm tagForm) {
+
+        Study study = studyService.getStudyToUpdate(account, path);
+        Tag tag = tagRepository.findByTitle(tagForm.getTagTitle()).orElseThrow();
+
+        studyService.removeStudyTags(study, tag);
+
+        return ResponseEntity.ok().build();
     }
 }
