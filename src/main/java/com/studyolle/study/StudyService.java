@@ -2,12 +2,15 @@ package com.studyolle.study;
 
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Study;
+import com.studyolle.domain.Tag;
 import com.studyolle.study.form.StudyDescriptionForm;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,5 +58,9 @@ public class StudyService {
 
     public void updateStudyImage(Study study, String image) {
         study.setImage(image);
+    }
+
+    public void updateStudyTags(Study study, Tag tag) {
+        study.getTags().add(tag);
     }
 }

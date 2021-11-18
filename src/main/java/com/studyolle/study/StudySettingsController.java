@@ -1,12 +1,18 @@
 package com.studyolle.study;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Study;
+import com.studyolle.domain.Tag;
+import com.studyolle.settings.form.TagForm;
 import com.studyolle.study.form.StudyDescriptionForm;
 import com.studyolle.study.validator.StudyDescriptionFormValidator;
+import com.studyolle.tag.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
@@ -17,6 +23,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.validation.Valid;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/study/{path}/settings")
@@ -26,6 +35,8 @@ public class StudySettingsController {
     private final StudyService studyService;
     private final ModelMapper modelMapper;
     private final StudyDescriptionFormValidator studyDescriptionFormValidator;
+    private final TagRepository tagRepository;
+    private final ObjectMapper objectMapper;
 
     @InitBinder("studyDescriptionForm")
     public void studyDescriptionFormInitBinder(WebDataBinder webDataBinder) {
@@ -94,6 +105,34 @@ public class StudySettingsController {
         attributes.addFlashAttribute("message", "배너 사용상태가 변경되었습니다.");
 
         return "study/settings/banner";
+    }
+
+    @GetMapping("/tags")
+    public String tagsForm(@CurrentUser Account account, @PathVariable String path, Model model)
+            throws JsonProcessingException {
+        Study study = studyService.getStudyToUpdate(account, path);
+
+        List<String> allTags = tagRepository.findAll().stream().map(Tag::getTitle).collect(Collectors.toList());
+
+        model.addAttribute(account);
+        model.addAttribute(study);
+        model.addAttribute("tags", study.getTags().stream().map(Tag::getTitle).collect(Collectors.toList()));
+        model.addAttribute("whitelist", objectMapper.writeValueAsString(allTags));
+
+        return "study/settings/tags";
+    }
+
+    @PostMapping("/tags/add")
+    public ResponseEntity addStudyTag(@CurrentUser Account account, @PathVariable String path
+            , @RequestBody TagForm tagForm) {
+        Study study = studyService.getStudyToUpdate(account, path);
+        Tag tag = tagRepository.findByTitle(tagForm.getTagTitle()).orElseGet(() -> tagRepository.save(Tag.builder()
+                .title(tagForm.getTagTitle())
+                .build()));
+
+        studyService.updateStudyTags(study, tag);
+
+        return ResponseEntity.ok().build();
     }
 
     private String getPath(String path) {
