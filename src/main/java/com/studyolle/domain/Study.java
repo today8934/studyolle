@@ -80,4 +80,8 @@ public class Study {
     public boolean isManager(UserAccount userAccount) {
         return this.managers.contains(userAccount.getAccount());
     }
+
+    public String getImage() {
+        return this.image != null ? image : "/images/default_banner.png";
+    }
 }
