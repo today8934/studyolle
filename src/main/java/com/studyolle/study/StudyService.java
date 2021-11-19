@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+import static com.studyolle.study.form.StudyForm.VALID_PATH_PATTERN;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -72,5 +74,29 @@ public class StudyService {
 
     public void removeStudyZones(Study study, Zone zone) {
         study.getZones().remove(zone);
+    }
+
+    public boolean isValidPath(String path) {
+        if (!path.matches(VALID_PATH_PATTERN)) {
+            return false;
+        }
+
+        return !studyRepository.existsByPath(path);
+    }
+
+    public void updatePath(Study study, String path) {
+        study.setPath(path);
+    }
+
+    public void publishStudy(Study study) {
+        study.setPublished(true);
+    }
+
+    public boolean isValidTitle(String newTitle) {
+        return newTitle.length() < 50;
+    }
+
+    public void updateTitle(Study study, String newTitle) {
+        study.setTitle(newTitle);
     }
 }
