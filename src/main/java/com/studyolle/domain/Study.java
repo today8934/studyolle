@@ -84,4 +84,8 @@ public class Study {
     public String getImage() {
         return this.image != null ? image : "/images/default_banner.png";
     }
+
+    public boolean isRemovable() {
+        return !this.isClosed() && this.isPublished();
+    }
 }
