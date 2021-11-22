@@ -216,6 +216,19 @@ public class StudySettingsController {
         return "redirect:/study/" + getPath(path) + "/settings/study";
     }
 
+    @PostMapping("/study/close")
+    public String studyClose(@CurrentUser Account account, @PathVariable String path, Model model
+            , RedirectAttributes attributes) {
+        Study study = studyService.getStudyWithManagersToUpdate(account, path);
+        studyService.closeStudy(study);
+
+        model.addAttribute(account);
+        model.addAttribute(study);
+        attributes.addFlashAttribute("message", "스터디가 종료되었습니다.");
+
+        return "redirect:/study/" + getPath(path) + "/settings/study";
+    }
+
     @PostMapping("/study/path")
     public String updateStudyPath(@CurrentUser Account account, @PathVariable String path, String newPath
             , Model model, RedirectAttributes attributes) {
@@ -230,7 +243,7 @@ public class StudySettingsController {
 
         studyService.updatePath(study, newPath);
         attributes.addFlashAttribute("message", "스터디 경로가 변경되었습니다.");
-        return "redirect:/study/" + getPath(newPath) + "/settings/study";
+        return "redirect:/study" + getPath(newPath) + "/settings/study";
     }
 
     @PostMapping("/study/title")
