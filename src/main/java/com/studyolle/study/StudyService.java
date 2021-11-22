@@ -30,8 +30,8 @@ public class StudyService {
         return newStudy;
     }
 
-    public Study getStudyToUpdate(Account account, String path) {
-        Study study = this.getStudy(path);
+    public Study getStudyWithAllToUpdate(Account account, String path) {
+        Study study = this.getStudyWithAll(path);
 
         if (!account.isManagerOf(study)) {
             throw new AccessDeniedException("해당 기능을 사용할 수 없습니다.");
@@ -40,8 +40,62 @@ public class StudyService {
         return study;
     }
 
-    public Study getStudy(String path) {
-        Study study = studyRepository.findByPath(path);
+    public Study getStudyWithManagersToUpdate(Account account, String path) {
+        Study study = this.getStudyWithManagers(path);
+
+        if (!account.isManagerOf(study)) {
+            throw new AccessDeniedException("해당 기능을 사용할 수 없습니다.");
+        }
+
+        return study;
+    }
+
+    public Study getStudyWithManagersAndTagsToUpdate(Account account, String path) {
+        Study study = this.getStudyWithManagersAndTags(path);
+
+        if (!account.isManagerOf(study)) {
+            throw new AccessDeniedException("해당 기능을 사용할 수 없습니다.");
+        }
+
+        return study;
+    }
+
+    public Study getStudyWithManagersAndZonesToUpdate(Account account, String path) {
+        Study study = this.getStudyWithManagersAndZones(path);
+
+        if (!account.isManagerOf(study)) {
+            throw new AccessDeniedException("해당 기능을 사용할 수 없습니다.");
+        }
+
+        return study;
+    }
+
+    public Study getStudyWithManagers(String path) {
+        Study study = studyRepository.findStudyWithManagersByPath(path);
+        if (study == null) {
+            throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
+        }
+        return study;
+    }
+
+    public Study getStudyWithManagersAndTags(String path) {
+        Study study = studyRepository.findStudyWithManagersAndTagsByPath(path);
+        if (study == null) {
+            throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
+        }
+        return study;
+    }
+
+    public Study getStudyWithManagersAndZones(String path) {
+        Study study = studyRepository.findStudyWithManagersAndZonesByPath(path);
+        if (study == null) {
+            throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
+        }
+        return study;
+    }
+
+    public Study getStudyWithAll(String path) {
+        Study study = studyRepository.findStudyWithAllByPath(path);
         if (study == null) {
             throw new IllegalArgumentException(path + "에 해당하는 스터디가 없습니다.");
         }
