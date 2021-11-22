@@ -80,6 +80,15 @@ public class Study {
     }
 
     public boolean isRemovable() {
-        return !this.isClosed() && this.isPublished();
+        return !this.isPublished();
+    }
+
+    public void close() {
+        if (this.published && !this.closed) {
+            this.closed = true;
+            this.closedDateTime = LocalDateTime.now();
+        } else {
+            throw new RuntimeException("스터디를 종료할 수 없습니다. 스터디를 공개하지 않았거나 이미 종료한 스터디입니다.");
+        }
     }
 }
